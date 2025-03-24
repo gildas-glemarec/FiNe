@@ -501,9 +501,9 @@ ggsave(filename = 'Inshore_Q4Q1.png',
 ### PLOT ALL 4 MAPS TOGETHER ####
 effort_plot <- 
   ## Top row
-  effort_breed_off + effort_breed_in + 
+  effort_breed_in + effort_breed_off +
   ## Bottom row
-  effort_nonbreed_off + effort_nonbreed_in
+  effort_nonbreed_in + effort_nonbreed_off
 map.full <- effort_plot + 
   plot_layout(ncol = 2, nrow = 2, 
               guides = "collect") & 
