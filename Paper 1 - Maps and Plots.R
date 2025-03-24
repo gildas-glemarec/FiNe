@@ -51,7 +51,7 @@ ICES.areas <- sf::st_read(
   layer = "ICES_Areas_20160601_cut_dense_3857")
 NAFO.areas <- sf::st_read(
   ## https://www.nafo.int/Portals/0/GIS/Divisions.zip
-  dsn = "C:/Users/ggle/Desktop/FiNe/shapefiles/",,
+  dsn = "shapefiles/",
   layer = "NAFO_Divisions_2021_poly_clipped")
 NAFO <- st_transform(NAFO.areas, st_crs(ICES.areas))
 NAFO$Area_Full <- paste('21', NAFO$Division, sep = '.')
@@ -260,7 +260,7 @@ effort_breed_off <- ggplot() +
     legend.direction = "horizontal",
     legend.justification = "center",
     legend.title = element_text(size = 20, face = "bold", vjust = 0.95),
-    legend.text = element_text(size = 12, angle = 45, vjust = 0.7),
+    legend.text = element_text(size = 12, vjust = 0.7),
     legend.key.width = unit(20, 'mm'),
     panel.border = element_rect(colour = "black",
                                 fill = NA, linewidth = 1.5),
@@ -268,7 +268,7 @@ effort_breed_off <- ggplot() +
     axis.text.x =  element_blank()
   )
 # effort_breed_off
-ggsave(filename = 'C:/Users/ggle/Desktop/FiNe/Offshore_Q2Q3.png',
+ggsave(filename = 'Offshore_Q2Q3.png',
        units = 'mm',
        width = 297, height = 297,
        plot = effort_breed_off,
@@ -335,7 +335,7 @@ effort_breed_in <- ggplot() +
     legend.direction = "horizontal",
     legend.justification = "center",
     legend.title = element_text(size = 20, face = "bold", vjust = 0.95),
-    legend.text = element_text(size = 12, angle = 45, vjust = 0.7),
+    legend.text = element_text(size = 12, vjust = 0.7),
     legend.key.width = unit(20, 'mm'),
     panel.border = element_rect(colour = "black",
                                 fill = NA, linewidth = 1.5),
@@ -343,7 +343,7 @@ effort_breed_in <- ggplot() +
     axis.text = element_blank()
   )
 # effort_breed_in
-ggsave(filename = 'C:/Users/ggle/Desktop/FiNe/Inshore_Q2Q3.png',
+ggsave(filename = 'Inshore_Q2Q3.png',
        units = 'mm',
        width = 297, height = 297,
        plot = effort_breed_in,
@@ -410,14 +410,14 @@ effort_nonbreed_off <- ggplot() +
     legend.direction = "horizontal",
     legend.justification = "center",
     legend.title = element_text(size = 20, face = "bold", vjust = 0.95),
-    legend.text = element_text(size = 12, angle = 45, vjust = 0.7),
+    legend.text = element_text(size = 12, vjust = 0.7),
     legend.key.width = unit(20, 'mm'),
     panel.border = element_rect(colour = "black",
                                 fill = NA, linewidth = 1.5),
     axis.title = element_blank()
   )
 # effort_nonbreed_off
-ggsave(filename = 'C:/Users/ggle/Desktop/FiNe/Offshore_Q4Q1.png',
+ggsave(filename = 'Offshore_Q4Q1.png',
        units = 'mm',
        width = 297, height = 297,
        plot = effort_nonbreed_off,
@@ -484,7 +484,7 @@ effort_nonbreed_in <- ggplot() +
     legend.direction = "horizontal",
     legend.justification = "center",
     legend.title = element_text(size = 20, face = "bold", vjust = 0.95),
-    legend.text = element_text(size = 12, angle = 45, vjust = 0.7),
+    legend.text = element_text(size = 12, vjust = 0.7),
     legend.key.width = unit(20, 'mm'),
     panel.border = element_rect(colour = "black",
                                 fill = NA, linewidth = 1.5),
@@ -492,7 +492,7 @@ effort_nonbreed_in <- ggplot() +
     axis.text.y = element_blank()
   )
 # effort_nonbreed_in
-ggsave(filename = 'C:/Users/ggle/Desktop/FiNe/Inshore_Q4Q1.png',
+ggsave(filename = 'Inshore_Q4Q1.png',
        units = 'mm',
        width = 297, height = 297,
        plot = effort_nonbreed_in,
@@ -508,7 +508,7 @@ map.full <- effort_plot +
   plot_layout(ncol = 2, nrow = 2, 
               guides = "collect") & 
   theme(legend.position = "bottom")
-ggsave(filename = 'C:/Users/ggle/Desktop/FiNe/map.LL.effort.png',
+ggsave(filename = 'map.LL.effort.png',
        units = 'mm',
        width = 297, height = 297,
        plot = map.full,
