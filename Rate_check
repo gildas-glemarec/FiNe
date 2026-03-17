@@ -1,0 +1,432 @@
+##Explore rates of bycatch####
+#monitor_df<-read.csv2()
+library(lubridate)
+library(dplyr)
+# Data wrangeling ###################################################
+df<-WKFINE_data_TEMPLATE_FINAL_UK_GR_IS_FO_NO
+names(df)
+#try to clean the names
+clean_names <- function(names) {
+  names %>%
+    gsub("\\(.*?\\)", "", .) %>%  # Remove parentheses and content inside
+    gsub("\\s+", "_", .) %>%      # Replace spaces with underscores
+    trimws() %>%                  # Trim leading/trailing spaces
+    tolower()                     # Convert to lowercase
+}
+names(df)
+
+colnames(df) <- clean_names(colnames(df))
+#extract month from different date formats (first fix dataformat)
+
+
+
+# Convert both date columns to character (if needed)
+df <- df %>%
+  mutate(across(c(set_date_, haul_date_), as.character))
+
+# Select the first available date (assuming set date is preffered due to higher chance of bycatch)
+df <- df %>%
+  mutate(selected_date = coalesce(set_date_,haul_date_))  # Pick first non-NA date
+
+# Parse multiple date formats, now including "ymd"
+df <- df %>%
+  mutate(date_parsed = parse_date_time(selected_date, 
+                                       orders = c("dmy", "d.m.y", "d.b.y", "d.b.Y", "ymd")))
+
+# Extract month and year
+df <- df %>%
+  mutate(month = month(date_parsed),
+         year = year(date_parsed))
+
+##explore bycatch of fulmar
+sum(df$northern_fulmar...49, na.rm = T)
+
+#set na to zero
+df$northern_fulmar...49[is.na(df$northern_fulmar...49)] <- 0
+
+hist(df$northern_fulmar...49)
+
+#make one lat and one lon variable (try to see if choosing either produces more lat long i total )
+
+df$haul_start_lat <- as.numeric(sub(",", ".", df$haul_start_lat, fixed=TRUE))
+df$haul_end_lat <- as.numeric(sub(",", ".", df$haul_end_lat, fixed=TRUE))
+df$haul_start_long <- as.numeric(sub(",", ".", df$haul_start_long, fixed=TRUE))
+df$haul_end_long <- as.numeric(sub(",", ".", df$haul_end_long, fixed=TRUE))
+
+df <- df %>%
+  mutate(lat = coalesce(haul_start_lat ,haul_end_lat))
+
+df <- df %>%
+  mutate(lon = coalesce(haul_start_long, haul_end_long))
+
+#how many with NA?
+table(is.na(df$lon))
+table(is.na(df$lat))
+
+#do the na's for lat lon have bycatch?
+
+table(df[!complete.cases(df$lat),]$northern_fulmar...49)# indeed
+table(df[!complete.cases(df$lat),]$country) # 30 FO and 4 IS
+
+table(df$country)
+
+#assign lat lon to ICES areaCode to match with effort data
+#can only find statistical rectangles not areas in existing libraries.Try to assign based on shape file. 
+#If anyone has a better code for this, please include
+
+library(sf)
+
+# path to downloaded shapefile
+shapefile_path <- "C:/Users/kim.barum/OneDrive - NINA/Bifangst/ICES_shapefile/ICES_Areas_20160601_cut_dense_3857.shp"
+ices_areas <- st_read(shapefile_path)
+
+
+#remove na's from lat lon (NB! this effectively removes all FO data!!)
+df_nona<-df[complete.cases(df$lat),]
+# Convert lat lon in monitor  data to sf object
+df_sf <- st_as_sf(df_nona, coords = c("lon", "lat"), crs = 4326)
+
+# Ensure both datasets use the same CRS
+ices_areas <- st_transform(ices_areas, crs = st_crs(df_sf))
+
+# Error messages ,trying to disable s2 for this operation as it googles s2 are rather strict
+sf_use_s2(FALSE)
+
+
+# Perform spatial join
+df_with_ices <- st_join(df_sf, ices_areas, join = st_intersects)
+
+
+
+df_with_ices <- df_with_ices %>%
+  mutate(breeding_season = case_when(
+    month %in% 5:8 ~ "Breeding",         # May–August
+    month %in% c(1:4, 9:12) ~ "Non-breeding",  # Jan–Apr & Sep–Dec
+    TRUE ~ NA_character_        
+  ))
+
+
+
+#checking for trends in rates
+# Preparations
+library(ggplot2)
+library(viridis)
+library(mgcv)
+library(mgcViz)
+library(bbmle)
+library(car)
+library(DHARMa)
+df_with_ices<- mutate(df_with_ices,
+             across(c(country,year, month, breeding_season,Area_Full),
+                    factor,
+                    .names = "fac_{.col}"))#,
+            # across(c(distcoast_km, distcolony_km, colony_npairs, lat, long),
+             #       scale,
+              #      .names = "std_{.col}"))
+#Include weighting of effort by country
+df_with_ices <- df_with_ices %>%
+  group_by(country) %>%
+  mutate(weight_effort = 1 / sum(no_of_hooks_shot)) %>%
+  ungroup()
+
+#remove two areas due to very low sample size within area
+df_with_ices<-df_with_ices[!(df_with_ices$fac_Area_Full %in% c("27.12.a.4", "27.7.k.2")),] #did not do the trick
+
+df_with_ices_reduced <- df_with_ices %>%
+  group_by(fac_Area_Full) %>%
+  filter(n() > 6) %>%
+  ungroup()
+
+df_with_ices_reduced$fac_Area_Full <- droplevels(df_with_ices_reduced$fac_Area_Full)
+# relevel reference as model did not run otherwise
+df_with_ices_reduced$fac_Area_Full <- relevel(df_with_ices_reduced$fac_Area_Full, ref = "27.2.a.2")#canhe ref level as the model strugled
+
+# chech if years and areas are nested or crossed
+table(df_with_ices_reduced$fac_Area_Full, df_with_ices_reduced$fac_year)# they are indeed nested, but might not have the data to include nested structure
+
+
+# Model fitting #####################################################################
+
+mods <- list()
+
+#Null model
+
+#test for different hook-effect 
+mods$m1 <- gam(northern_fulmar...49 ~ + offset(log(no_of_hooks_shot)) + s(fac_Area_Full, bs="re")+ s(fac_year, bs = "re"),
+               family = nb,
+               method = "ML",
+               data = df_with_ices_reduced,
+               select=T)
+
+mods$m2 <- gam(northern_fulmar...49 ~ offset(log(no_of_hooks_shot))+ s(no_of_hooks_shot, bs="cr", k=5) + s(fac_Area_Full, bs="re")+ s(fac_year, bs = "re"),
+               family = nb,
+               method = "ML",
+               data = df_with_ices_reduced,
+               select=T)
+mods$m3 <- gam(northern_fulmar...49 ~  s(no_of_hooks_shot, bs="cr", k=5) + s(fac_Area_Full, bs="re")+ s(fac_year, bs = "re"),
+               family = nb,
+               method = "ML",
+               data = df_with_ices_reduced,
+               select=T)
+
+mods$m4 <- gam(northern_fulmar...49 ~  s(fac_Area_Full, bs="re")+ s(fac_year, bs = "re"),
+               family = nb,
+               method = "ML",
+               data = df_with_ices_reduced,
+               select=T)
+mods$m5 <- gam(northern_fulmar...49 ~  no_of_hooks_shot+s(fac_Area_Full, bs="re")+ s(fac_year, bs = "re"),
+               family = nb,
+               method = "ML",
+               data = df_with_ices_reduced,
+               select=T)
+
+AICtab(mods)
+
+
+#model assumes interest in spatio-temporal effect within year, not across specifically
+
+mods$m6 <- gam(northern_fulmar...49 ~ fac_breeding_season + no_of_hooks_shot+s(fac_Area_Full, bs="re")+ s(fac_year, bs = "re"),
+               family = nb,
+               method = "fREML",
+               data = df_with_ices_reduced,
+               select=T)
+
+mods$m7 <- gam(northern_fulmar...49 ~ fac_breeding_season + no_of_hooks_shot+s(fac_Area_Full, bs="re")+ s(fac_year, bs = "re")+s(year, by = fac_Area_Full, bs = "fs", k=10),
+               family = nb,
+               method = "fREML",
+               data = df_with_ices_reduced,
+               select=T)
+
+
+
+
+AICtab(mods)
+
+gam.check(mods$m7) 
+
+#need to recheck model with only well sampled areas:
+
+
+# Identify well-sampled ICES areas
+area_counts <- table(df_with_ices_reduced$fac_Area_Full)
+keep_areas  <- names(area_counts)[area_counts >= 500]
+
+# fit same model on filtered data
+df_fit <- df_with_ices_reduced %>%
+  filter(fac_Area_Full %in% keep_areas)
+#trying to refit model with new data
+mods_m7 <- gam(
+  northern_fulmar...49 ~
+    fac_breeding_season +
+    no_of_hooks_shot +
+    s(fac_Area_Full, bs="re") +
+    s(fac_year,      bs="re") +
+    s(year, by = fac_Area_Full, bs = "fs", k=10),
+  family = nb(),
+  method = "fREML",
+  data   = df_fit,
+  select = TRUE
+)
+
+# Build prediction grid for all areas
+years     <- seq(2012, max(df_with_ices_reduced$year, na.rm=T),by=1)
+ref_hook  <- median(df_with_ices_reduced$no_of_hooks_shot,na.rm=T)
+ref_season<- levels(df_with_ices_reduced$fac_breeding_season)[1]
+
+pred_grid <- expand.grid(
+  year                = years,
+  fac_Area_Full       = levels(df_with_ices_reduced$fac_Area_Full),
+  fac_breeding_season = ref_season,
+  no_of_hooks_shot    = ref_hook
+) %>%
+  mutate(fac_year = factor(year))
+
+# 4. Predict (will give NA for areas not in fit data)
+pred_grid$pred_count <- predict(mods_m7, pred_grid, type="response")
+pred_grid$pred_rate  <- pred_grid$pred_count / ref_hook
+####################################################################
+
+# spatio_temporal_rate_maps.R
+# 
+# Purpose: Produce spatio-temporal maps of predicted bycatch rates using ICES/NAFO area shapefiles
+
+# Clean workspace and ensure English messages
+rm(list = ls()); gc()
+Sys.setenv(LANG = "en")
+
+# Load required packages (installs pacman if missing)
+if (!"pacman" %in% rownames(installed.packages())) install.packages("pacman")
+library(pacman)
+p_load(
+  tidyverse, data.table,
+  sf, rnaturalearth,
+  viridis, patchwork
+)
+
+# 1. LOAD SHAPEFILES AND PREPARE AREA CODES -----------------------------------
+# World basemap
+world <- ne_countries(scale = "medium", returnclass = "sf") %>%
+  select(continent, geometry)
+
+# ICES areas: read and add Area_Full to match prediction codes (lowercase)
+ICES.areas <- st_read(dsn = "shapefiles/", layer = "ICES_Areas_20160601_cut_dense_3857") %>%
+  mutate(Area_Full = tolower(Area_27))
+
+# NAFO divisions: read, transform, and add Area_Full code
+NAFO.areas <- st_read(dsn = "shapefiles/", layer = "NAFO_Divisions_2021_poly_clipped")
+NAFO <- NAFO.areas %>%
+  st_transform(st_crs(ICES.areas)) %>%
+  mutate(
+    Area_Full = paste0('21.', Division) %>%
+      str_remove_all('-') %>%
+      str_replace_all('([A-Z])', '.\1') %>%
+      tolower()
+  )
+
+# 2. LOAD PREDICTION GRID ------------------------------------------------------
+# CSV must have columns: fac_breeding_season ("Q2Q3" or "Q4Q1"), fac_Area_Full, pred_rate
+pred <- fread("pred_grid.csv") %>%
+  rename(
+    quarter_split = fac_breeding_season,
+    Area_Full     = fac_Area_Full
+  ) %>%
+  # ensure case alignment with shapefiles
+  mutate(Area_Full = tolower(Area_Full),
+         quarter_split = toupper(quarter_split))
+
+# 3. SUMMARISE MEAN RATE BY AREA & SEASON ---------------------------------------
+summary_rates <- pred %>%
+  group_by(quarter_split, Area_Full) %>%
+  summarise(mean_rate = mean(pred_rate, na.rm = TRUE), .groups = "drop")
+#MEAN RATE BY AREA & SEASON -------------------------------------
+  summary_rates <- pred %>%
+  group_by(quarter_split, Area_Full) %>%
+  summarise(mean_rate = mean(pred_rate, na.rm = TRUE), .groups = "drop")
+
+# 4. MAP FUNCTION -------------------------------------------------------------
+make_map <- function(season_label) {
+  # filter summarized rates
+  rates <- summary_rates %>% filter(quarter_split == season_label)
+  
+  # merge with spatial polygons
+  sf_ices <- ICES.areas %>% left_join(rates, by = "Area_Full")
+  sf_nafo <- NAFO      %>% left_join(rates, by = "Area_Full")
+  
+  ggplot() +
+    # base polygons
+    geom_sf(data = ICES.areas, fill = "white", color = NA) +
+    geom_sf(data = NAFO,       fill = "white", color = NA) +
+    # fill by mean_rate
+    geom_sf(data = sf_ices, aes(fill = mean_rate), color = NA) +
+    geom_sf(data = sf_nafo, aes(fill = mean_rate), color = NA) +
+    # overlay land mask
+    geom_sf(
+      data = world %>% filter(continent %in% c("Europe", "North America")),
+      fill = "black", color = "black", size = 0
+    ) +
+    coord_sf(
+      crs  = st_crs(ICES.areas),
+      xlim = c(-75, 40),
+      ylim = c(33, 70),
+      expand = FALSE
+    ) +
+    scale_fill_viridis_c(
+      name     = "Bycatch rate\n(birds per hook)",
+      na.value = "grey90"
+    ) +
+    labs(
+      title = case_when(
+        season_label == "Q2Q3" ~ "Breeding season (Q2–Q3)",
+        season_label == "Q4Q1" ~ "Non-breeding (Q4–Q1)"
+      )
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title      = element_text(size = 14, face = "bold"),
+      legend.position = "bottom",
+      axis.title      = element_blank(),
+      panel.grid      = element_blank(),
+      panel.border    = element_rect(color = "black", fill = NA)
+    )
+}
+
+# 5. CREATE AND SAVE PANEL OF TWO MAPS ---------------------------------------
+map_breed    <- make_map("Q2Q3")
+map_nonbreed <- make_map("Q4Q1")
+combined <- map_breed + map_nonbreed +
+  plot_layout(ncol = 2, guides = "collect") &
+  theme(legend.position = "bottom")
+
+# save output
+ggsave(
+  filename = "bycatch_rate_maps.png",
+  plot     = combined,
+  width    = 297, height = 148,
+  units    = "mm",
+  dpi      = 300
+)
+
+
+plot(mods$m1, pages = 1, shade = TRUE, seWithMean = TRUE)
+
+
+
+# Temporal model
+mods$m3 = update(mods$m1, ~. + fac_breeding_season + fac_Area_Full)
+mods$m4 = update(mods$m1, ~. + fac_breeding_season * fac_Area_Full)
+mods$m5 = update(mods$m1, ~. + fac_breeding_season)
+mods$m6 = update(mods$m1, ~. + fac_Area_Full)
+
+
+
+coef(mods$m2)
+
+confint.default(mods$m2)
+
+# Spatiotemporal models
+mods$m3 = update(mods$m2, ~. + distcoast_km)
+mods$m4 = update(mods$m2, ~. + distcolony_km)
+mods$m5 = update(mods$m2, ~. + std_distcolony_km * std_colony_npairs)
+mods$m6 = update(mods$m2, ~. + s(haul_start_long, haul_start_lat))
+is.na(df$haul_start_lat)
+
+mod_aic <- AICtab(mods)
+
+summary(mods$m6)
+anova(mods$m6)
+par(mfrow = c(1, 2))
+plot(mods$m2)
+dev.off()
+
+# function to plot residuals against all dependent variables
+explore_residuals <- function(simres) {
+  par(mfrow = c(3,3))
+  plotResiduals(simres, rf$fac_year)
+  plotResiduals(simres, rf$fac_month)
+  plotResiduals(simres, rf$fac_breeding)
+  plotResiduals(simres, rf$lat)
+  plotResiduals(simres, rf$long)
+  plotResiduals(simres, rf$distcoast_km)
+  plotResiduals(simres, rf$distcolony_km)
+  plotResiduals(simres, rf$fac_vessel)
+  plotResiduals(simres, rf$nhooks)
+  par(mfrow = c(1,1))
+}
+
+simres_m6 <- simulateResiduals(mods$m6, n = 1000)
+plot(simres_m6)
+
+testOutliers(simres_m6)
+
+rf %>%
+  dplyr::slice(outliers(simres_m6)) %>%
+  mutate(pred = predict(mods$m6, ., type = "response")) %>%
+  relocate(pred)
+
+testZeroInflation(simres_m6)
+explore_residuals(simres_m6)
+
+
+
+
+
