@@ -109,7 +109,7 @@ no_dat$vessel_length <- as.numeric(no_dat$vessel_length)
 no_dat[, length.cat := case_when(vessel_length < 12 ~ "<12m",
                                  vessel_length > 24 ~ ">24m",
                                  between(vessel_length, lower = 12, upper = 24,
-                                         incbounds = F) ~ "12m-24m",
+                                         incbounds = F) ~ "12-24m",
                                  .default = NA_character_)]
 no_dat <- st_as_sf(no_dat, 
                    coords = c("lon", "lat"),
@@ -210,7 +210,7 @@ dat_effort[, length.cat :=
                                                 ## Some assumptions here
                                                 "F", "NK", "Unknown", "Other") ~ "<12m",
                        vesselLengthRange %in% c("VL1215", "VL1218", "VL1518",
-                                                "VL1524", "VL1824") ~ "12m-24m",
+                                                "VL1524", "VL1824") ~ "12-24m",
                        vesselLengthRange %in% c("VL2440", "VL40XX") ~ ">24m",
                        .default = length.cat)]
 dat_effort[, division := case_when(

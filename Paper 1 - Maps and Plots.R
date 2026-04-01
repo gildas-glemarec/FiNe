@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -794,7 +793,7 @@ dat[, length.cat :=
                                          ## Some assumptions here
                                          "F", "NK", "Unknown", "Other") ~ "<12m",
                 vesselLengthRange %in% c("VL1215", "VL1218", "VL1518",
-                                         "VL1524", "VL1824") ~ "12m-24m",
+                                         "VL1524", "VL1824") ~ "12-24m",
                 vesselLengthRange %in% c("VL2440", "VL40XX") ~ ">24m",
                 .default = NA)]
 dat[, quarter_split := fifelse(quarter %in% c(1,4),
@@ -999,7 +998,7 @@ ggsave(filename = 'effort.0.12.png',
        plot = effort.0.12,
        device = "png")
 
-#### Effort for smaller vessels (12m-24m) #----
+#### Effort for smaller vessels (12-24m) #----
 effort.12.24 <- ggplot() +
   ## Plot Background
   geom_sf(data = ICES.areas.sub, 
@@ -1018,7 +1017,7 @@ effort.12.24 <- ggplot() +
   ) +
   ## Plot Effort data ICES
   geom_sf(data = ICES_NAFO_dat %>% 
-            dplyr::filter(length.cat == '12m-24m'),
+            dplyr::filter(length.cat == '12-24m'),
           aes(fill = meanDaS)
           # ,
           # colour = NA,  # Remove the border
@@ -1047,7 +1046,7 @@ effort.12.24 <- ggplot() +
     expand = FALSE
   ) +
   ## Title of the sub-plot
-  ggtitle("Vessels 12m-24m") +
+  ggtitle("Vessels 12-24m") +
   ## Theme
   theme_minimal() +
   theme(
@@ -1662,4 +1661,3 @@ ggsave(filename = 'map.LL.effort.per.length.png',
 # line.plot4 <- line.plot.full4 + facet_grid(vars(in.off.shore), scales = "free")
 # 
 # line.plot4
->>>>>>> eab621e3607f380457ada8ba6edb22d1438cd620
