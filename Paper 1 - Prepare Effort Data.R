@@ -196,7 +196,7 @@ gr_data$division <- gsub("([A-Z])$", ".\\1", gr_data$division)
 
 #### Faroese data #----
 #### NB. The data are already summarised to area/year, so we'll add later
-fo_dat <- fread("FO data/FO_fishing_days.csv")
+fo_dat <- fread("FO data/FO_fishing_days_clean.csv")
 
 ## Bind BYC (which incl. UK + IS), NO, and GR fishing effort datasets together #----
 dat_effort <- rbind(byc_dat, gr_data, no_dat, fill = TRUE)
@@ -226,8 +226,16 @@ dat_effort[, division := case_when(
   division == '27.2.a.2' ~ '27.2.a',
   division == '27.2.b.1' ~ '27.2.b',
   division == '27.2.b.2' ~ '27.2.b',
-  division == '27.3.d.28.1' ~ '27.3.d.28',
-  division == '27.3.d.28.2' ~ '27.3.d.28',
+  division == '27.3.a.20' ~ '27.3.a',
+  division == '27.3.a.21' ~ '27.3.a',
+  division == '27.3.b.23' ~ '27.3.b',
+  division == '27.3.c.22' ~ '27.3.c',
+  division == '27.3.d.24' ~ '27.3.d',
+  division == '27.3.d.25' ~ '27.3.d',
+  division == '27.3.d.26' ~ '27.3.d',
+  division == '27.3.d.27' ~ '27.3.d',
+  division == '27.3.d.28.1' ~ '27.3.d',
+  division == '27.3.d.28.2' ~ '27.3.d',
   division == '27.5.a.1' ~ '27.5.a',
   division == '27.5.a.2' ~ '27.5.a',
   division == '27.5.b.1.a' ~ '27.5.b',
