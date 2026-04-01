@@ -64,14 +64,15 @@ NAFO.divisions.sub <- subset(NAFO.divisions,
                                          '21.1.C', '21.1.D',
                                          '21.1.E', '21.1.F'))
 ### Monitoring data (data all FiNE countries) ----
-dat_mon <- fread("mon_data_merged/dat_monitoring_withByc.csv")
+dat_mon <- fread("dat_monitoring_withByc.csv")
 dat_mon$set.date <- dmy(dat_mon$set.date)
 dat_mon$haul.date <- dmy(dat_mon$haul.date)
 dat_mon$num.hooks.shot <- as.numeric(dat_mon$num.hooks.shot)
 dat_mon$num.hooks.lost <- as.numeric(dat_mon$num.hooks.lost)
+dat_mon$division.check <- dat_mon$division
 # table(dat_mon$division, useNA = 'always')
 dat_mon$id <- seq_len(nrow(dat_mon))
-temp <- dat_mon[division == '']
+temp <- dat_mon[division.check == '']
 temp_sf <- st_as_sf(temp, coords = c("haul.lon.start", "haul.lat.start"),
                         crs = st_crs(ICES.divisions))
 temp <- as.data.table(st_join(
@@ -81,8 +82,8 @@ temp <- as.data.table(st_join(
   left = T))
 setkey(dat_mon, id)
 setkey(temp, id)
-dat_mon[temp, division := fifelse(division == '' & !is.na(i.division.y), 
-                                 i.division.y, division)]
+dat_mon[temp, division.check := fifelse(division.check == '' & !is.na(i.division.y), 
+                                 i.division.y, division.check)]
 dat_mon[, length.cat := fifelse(length.cat == '', 
                                 case_when(vessel.length < 12 ~ "<12m",
                                           vessel.length > 24 ~ ">24m",
