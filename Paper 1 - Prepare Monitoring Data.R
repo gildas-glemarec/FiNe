@@ -69,10 +69,9 @@ dat_mon$set.date <- dmy(dat_mon$set.date)
 dat_mon$haul.date <- dmy(dat_mon$haul.date)
 dat_mon$num.hooks.shot <- as.numeric(dat_mon$num.hooks.shot)
 dat_mon$num.hooks.lost <- as.numeric(dat_mon$num.hooks.lost)
-dat_mon$division.check <- dat_mon$division
 # table(dat_mon$division, useNA = 'always')
 dat_mon$id <- seq_len(nrow(dat_mon))
-temp <- dat_mon[division.check == '']
+temp <- dat_mon[division == '']
 temp_sf <- st_as_sf(temp, coords = c("haul.lon.start", "haul.lat.start"),
                         crs = st_crs(ICES.divisions))
 temp <- as.data.table(st_join(
@@ -82,76 +81,13 @@ temp <- as.data.table(st_join(
   left = T))
 setkey(dat_mon, id)
 setkey(temp, id)
-dat_mon[temp, division.check := fifelse(division.check == '' & !is.na(i.division.y), 
-                                 i.division.y, division.check)]
-dat_mon[, length.cat := fifelse(length.cat == '', 
-                                case_when(vessel.length < 12 ~ "<12m",
-                                          vessel.length > 24 ~ ">24m",
-                                          between(vessel.length, lower = 12, upper = 24,
-                                                  incbounds = F) ~ "12m-24m",
-                                          .default = NA_character_),
-                                length.cat)]
+dat_mon[temp, division := fifelse(division == '' & !is.na(i.division.y), 
+                                 i.division.y, division)]
+# table(dat_mon$division, useNA = 'always')
+dat_mon[, division := case_when(
+  division == '21.1' ~ '21.1.A',
+  division == '27.10.a.2' ~ '27.10.a',
+  division == '27.3.d.26' ~ '27.3.d',
+  .default = division
+)]
 fwrite(dat_mon, 'dat_monitoring.csv')
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# dat_mon <- fread("WKFINE.mon.data.csv")
-# setnames(dat_mon, old = dput(names(dat_mon)), 
-#          new = c('country','trip.no','haul.no','vessel.length',
-#                  'set.date','haul.date','set.time.start','set.time.end','soak',
-#                  'haul.time.start','haul.time.end','haul.lat.start',
-#                  'haul.lon.start','haul.lat.end','haul.lon.end',
-#                  'perc.haul.obs','view.lines','LL.config','target','bait.type',
-#                  'bait.cond','num.hooks.shot','num.hooks.lost','IMR.qual',
-#                  'LL.length','mitig.set','mitig.haul','depth','sea.state',
-#                  'wind','cloud','LL.material','LL.diam','snood.length',
-#                  'hook.size','hook.type','dist.snood.hook','float.type',
-#                  'float.interv','tot.catch.weight','tot.catch.num','LL.set.type',
-#                  'BSL.length','comments.set','attach.pos.set','LL.haul.type',
-#                  'comments.haul','attach.pos.haul',
-#                  'fulmar','gannet','skua','gbb.gull','kittiwake','g.gull',
-#                  'h.gull','lbb.gull','fulmar2','gannet2','unid.gull',
-#                  'smthg.else'))
-# dat_mon$haul.lat.start <- as.numeric(dat_mon$haul.lat.start)
-# dat_mon$haul.lon.start <- as.numeric(dat_mon$haul.lon.start)
-# dat_mon$set.date <- lubridate::dmy(dat_mon$set.date)
-# dat_mon$haul.date <- lubridate::dmy(dat_mon$haul.date)
-# # dat_mon$set.time.start <- lubridate::hms(dat_mon$set.time.start)
-# # dat_mon$set.time.end <- lubridate::hms(dat_mon$set.time.end)
-# dat_mon$soak <- as.numeric(dat_mon$soak)
-# dat_mon$haul.lon.end <- as.numeric(dat_mon$haul.lon.end)
-# dat_mon$depth <- as.numeric(dat_mon$depth)
-# dat_mon[, ID := paste0(country, trip.no, haul.no, haul.time.start)]
-# setkey(dat_mon, ID)
-# dat.points <- st_as_sf(subset(dat_mon, 
-#                               select = c("ID",
-#                                          "haul.lon.start",
-#                                          "haul.lat.start")),
-#                        coords = c("haul.lon.start",
-#                                   "haul.lat.start"),
-#                        crs = st_crs(ICES.divisions)) ## Assuming this is true
-# divisions.ICES <- st_intersection(dat.points, ICES.divisions)
-# divisions.NAFO <- st_intersection(dat.points, NAFO.divisions)
-# divisions.ICES.NAFO <- rbind(divisions.ICES %>% 
-#                                dplyr::select(ID, division), 
-#                              divisions.NAFO %>% 
-#                                dplyr::select(ID, division))
-# dat_mon.w.divisions <- left_join(dat_mon, divisions.ICES.NAFO, by = 'ID')
-# dat_mon.w.divisions <- dat_mon.w.divisions %>% 
-#   ## Making up the NA's in division "by hand"
-#   mutate(division = if_else(condition = !is.na(division), 
-#                             division,
-#                             case_when(startsWith(ID, 'GR') ~ '21.1',
-#                                       startsWith(ID, 'UK') ~ '27.7.a',
-#                                       startsWith(ID, 'IS') ~ '27.5.a',
-#                                       .default = NA_character_))) %>% 
-#   ## Update count data for fulmars and gannets (or ignore them? These are birds
-#   ## registered as "bycatch" but not dead)
-#   mutate(fulmar2 = replace_na(fulmar2, 0) ) %>% 
-#   mutate(gannet2 = replace_na(gannet2, 0) ) %>% 
-#   mutate(fulmar = fulmar + fulmar2) %>% 
-#   mutate(gannet = gannet + gannet2) %>% 
-#   dplyr::select(-ID, -geometry, -fulmar2, -gannet2)
-# 
-# ## Missing info on vessel length so stuck for now.
-# fwrite(dat_mon.w.divisions, 'dat_monitoring.csv')
