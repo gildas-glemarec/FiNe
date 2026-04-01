@@ -2,7 +2,7 @@
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Maps for FiNe
-## Author: Gildas Glemarec (DTU Aqua)
+## Authors: Gildas Glemarec (DTU Aqua) & Melanie Stock (HAFRO)
 ###
 ### NB.  Just make sure you put all the effort files in the main directory where
 ###      you saved this script. Shapefiles for ICES and NAFO need to be placed 
