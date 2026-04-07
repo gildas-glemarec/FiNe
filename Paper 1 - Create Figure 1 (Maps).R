@@ -479,7 +479,7 @@ mon.12.24 <- ggplot() +
   new_scale_fill() +
   geom_sf_pattern(
     data = ICES_NAFO_dat_mon %>%
-      dplyr::filter(length.cat == '<12m') %>%
+      dplyr::filter(length.cat == '12-24m') %>%
       dplyr::filter(ratio.mon == 0),
     aes(fill = "0.00"),
     pattern = "stripe",
@@ -560,7 +560,7 @@ mon.24plus <- ggplot() +
   new_scale_fill() +
   geom_sf_pattern(
     data = ICES_NAFO_dat_mon %>%
-      dplyr::filter(length.cat == '<12m') %>%
+      dplyr::filter(length.cat == '>24m') %>%
       dplyr::filter(ratio.mon == 0),
     aes(fill = "0.00"),
     pattern = "stripe",
