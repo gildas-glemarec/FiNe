@@ -113,14 +113,22 @@ ICES_NAFO_dat_effort <- rbind(ICES_dat_effort %>%
 
 #### Monitoring coverage data (incomplete w. vessel length cat.)----
 dat_mon <- fread('mon_data_merged/dat_monitoring.csv')
-# dat_mon <- dat_mon[year %in% c(2021:2025)] ## Restrict monitoring period
+dat_mon <- dat_mon[length.cat != '']
+dat_mon <- dat_mon[year %in% c(2021:2025)] ## Restrict monitoring period
 summary_dat_mon <- dat_mon %>% 
   group_by(division,length.cat,year) %>% 
   summarise(
-    sumObsDays = sum(daysAtSeaOb)) %>%
+    sumObsDays = sum(daysAtSeaOb, na.rm = T)) %>%
   ungroup() %>%
   group_by(division,length.cat) %>%
   summarise(meanObsDays = round(mean(sumObsDays, na.rm = T)))
+summary_dat_mon <- merge(summary_dat_effort,
+                         summary_dat_mon,
+                         by = c("division", "length.cat"),
+                         all = T) %>% 
+  mutate(meanObsDays  = replace_na(meanObsDays, 0)) %>% 
+  mutate(ratio.mon = meanObsDays / meanDaS)
+
 ICES_dat_mon <- merge(ICES.divisions, 
                       summary_dat_mon,
                       by = 'division',
@@ -134,11 +142,11 @@ NAFO_dat_mon <- merge(NAFO.divisions.sub,
 ICES_NAFO_dat_mon <- rbind(ICES_dat_mon %>% 
                              dplyr::select(division,
                                            length.cat,
-                                           meanObsDays),
+                                           ratio.mon),
                            NAFO_dat_mon %>% 
                              dplyr::select(division,
                                            length.cat,
-                                           meanObsDays))
+                                           ratio.mon))
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## MAPS OF LL FISHING EFFORT & MONITORING ----
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -374,17 +382,17 @@ mon.0.12 <- ggplot() +
   ## Plot Effort data ICES
   geom_sf(data = ICES_NAFO_dat_mon %>% 
             dplyr::filter(length.cat == '<12m'),
-          aes(fill = meanObsDays)
+          aes(fill = ratio.mon)
   ) +
   ## Choose a colour scale 
   scale_fill_gradientn(colours = pal, 
-                       # oob = scales::squish,
+                       oob = scales::squish,
                        name = "Mean\nmonitoring\ncoverage",
                        na.value = "grey",
                        # labels = c("0","10","20","30","40","50","550"),
-                       limits = c(0, 550)
-                       # labels = c("0", "0.05", "0.1", "0.15", "0.20"),
-                       # limits = c(0, 0.225)
+                       #limits = c(0, 550)
+                       #labels = c("0", "0.05", "0.1", "0.15", "0.20"),
+                       limits = c(0, 0.25)
   ) +
   ## Plot world map on top (because it should look better)
   geom_sf(data = world %>%
@@ -435,13 +443,17 @@ mon.12.24 <- ggplot() +
   ## Plot Effort data ICES
   geom_sf(data = ICES_NAFO_dat_mon %>% 
             dplyr::filter(length.cat == '12-24m'),
-          aes(fill = meanObsDays)
+          aes(fill = ratio.mon)
   ) +
   ## Choose a colour scale 
   scale_fill_gradientn(colours = pal, 
+                       oob = scales::squish,
                        name = "Mean\nmonitoring\ncoverage",
                        na.value = "grey",
-                       limits = c(0, 550)
+                       # labels = c("0","10","20","30","40","50","550"),
+                       #limits = c(0, 550)
+                       #labels = c("0", "0.05", "0.1", "0.15", "0.20"),
+                       limits = c(0, 0.25)
   ) +
   ## Plot world map on top (because it should look better)
   geom_sf(data = world %>%
@@ -492,13 +504,17 @@ mon.24plus <- ggplot() +
   ## Plot Effort data ICES
   geom_sf(data = ICES_NAFO_dat_mon %>% 
             dplyr::filter(length.cat == '>24m'),
-          aes(fill = meanObsDays)
+          aes(fill = ratio.mon)
   ) +
   ## Choose a colour scale 
   scale_fill_gradientn(colours = pal, 
+                       oob = scales::squish,
                        name = "Mean\nmonitoring\ncoverage",
                        na.value = "grey",
-                       limits = c(0, 550)
+                       # labels = c("0","10","20","30","40","50","550"),
+                       #limits = c(0, 550)
+                       #labels = c("0", "0.05", "0.1", "0.15", "0.20"),
+                       limits = c(0, 0.25)
   ) +
   ## Plot world map on top (because it should look better)
   geom_sf(data = world %>%
