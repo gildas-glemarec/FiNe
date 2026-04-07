@@ -1,8 +1,8 @@
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-## Prepare Fishing Effort and Maonitoring Coverage Mpas (FIGURE 1) for WKFINE
-## Author: Gildas Glemarec (DTU Aqua)
+## Prepare Fishing Effort and Monitoring Coverage Maps (FIGURE 1) for WKFINE
+## Authors: Gildas Glemarec (DTU Aqua) & Melanie Stock
 ###
 ### NB.  Just make sure you put all the effort files in the main directory where
 ###      you saved this script. Shapefiles for ICES and NAFO need to be placed 
