@@ -400,20 +400,20 @@ mon.0.12 <- ggplot() +
     data = ICES_NAFO_dat_mon %>%
       dplyr::filter(length.cat == '<12m') %>%
       dplyr::filter(ratio.mon == 0),
-    aes(fill = "0.00"),
+    aes(fill = "No\nmonitoring"),
     pattern = "stripe",
     pattern_colour = 'black',
     pattern_fill = "#2D8093",
     pattern_density = 0.5,
     pattern_spacing = 0.05,
     pattern_angle = 25
-  ) +
+    ) +
   scale_fill_manual(
-    values = c("0.00" = '#2D8093'),
+    values = c("No\nmonitoring" = '#2D8093'),
     name = "",
     guide = guide_legend(order = 2)
   ) +
-  scale_pattern_manual(values = c("0.00000" = "stripe")) +
+  scale_pattern_manual(values = c("No\nmonitoring" = "stripe")) +
   ## Plot world map on top (because it should look better)
   geom_sf(data = world %>%
             dplyr::filter(continent %in% c("Europe","North America")), 
@@ -432,7 +432,9 @@ mon.0.12 <- ggplot() +
   theme_minimal() +
   theme(
     legend.position = "right",
+    legend.spacing.y = unit(-0.2, "cm"),
     legend.direction = "vertical",
+    legend.margin = margin(0,0,0,0),
     legend.justification = "right",     legend.key.height = unit(0.1, "npc"), 
     legend.title = element_text(size = 12, face = "bold"),
     legend.text = element_text(size = 12, vjust = 0.7),
@@ -481,20 +483,20 @@ mon.12.24 <- ggplot() +
     data = ICES_NAFO_dat_mon %>%
       dplyr::filter(length.cat == '12-24m') %>%
       dplyr::filter(ratio.mon == 0),
-    aes(fill = "0.00"),
+    aes(fill = "No\nmonitoring"),
     pattern = "stripe",
     pattern_colour = 'black',
     pattern_fill = "#2D8093",
     pattern_density = 0.5,
     pattern_spacing = 0.05,
     pattern_angle = 25
-  ) +
+    ) +
   scale_fill_manual(
-    values = c("0.00" = '#2D8093'),
+    values = c("No\nmonitoring" = '#2D8093'),
     name = "",
     guide = guide_legend(order = 2)
   ) +
-  scale_pattern_manual(values = c("0.00000" = "stripe")) +
+  scale_pattern_manual(values = c("No\nmonitoring" = "stripe")) +
   ## Plot world map on top (because it should look better)
   geom_sf(data = world %>%
             dplyr::filter(continent %in% c("Europe","North America")), 
@@ -513,7 +515,9 @@ mon.12.24 <- ggplot() +
   theme_minimal() +
   theme(
     legend.position = "right",
+    legend.spacing.y = unit(-0.2, "cm"),
     legend.direction = "vertical",
+    legend.margin = margin(0,0,0,0),
     legend.justification = "right",     legend.key.height = unit(0.1, "npc"), 
     legend.title = element_text(size = 12, face = "bold"),
     legend.text = element_text(size = 12, vjust = 0.7),
@@ -562,20 +566,21 @@ mon.24plus <- ggplot() +
     data = ICES_NAFO_dat_mon %>%
       dplyr::filter(length.cat == '>24m') %>%
       dplyr::filter(ratio.mon == 0),
-    aes(fill = "0.00"),
+    aes(fill = "No\nmonitoring"),
     pattern = "stripe",
     pattern_colour = 'black',
     pattern_fill = "#2D8093",
     pattern_density = 0.5,
     pattern_spacing = 0.05,
     pattern_angle = 25
-  ) +
+    ) +
+  ## Adding separate legend for zero monitoring
   scale_fill_manual(
-    values = c("0.00" = '#2D8093'),
+    values = c("No\nmonitoring" = '#2D8093'),
     name = "",
     guide = guide_legend(order = 2)
   ) +
-  scale_pattern_manual(values = c("0.00000" = "stripe")) +
+  scale_pattern_manual(values = c("No\nmonitoring" = "stripe")) +
   ## Plot world map on top (because it should look better)
   geom_sf(data = world %>%
             dplyr::filter(continent %in% c("Europe","North America")), 
@@ -594,7 +599,9 @@ mon.24plus <- ggplot() +
   theme_minimal() +
   theme(
     legend.position = "right",
+    legend.spacing.y = unit(-0.2, "cm"),
     legend.direction = "vertical",
+    legend.margin = margin(0,0,0,0),
     legend.justification = "right",     legend.key.height = unit(0.1, "npc"), 
     legend.title = element_text(size = 12, face = "bold"),
     legend.text = element_text(size = 12, vjust = 0.7),
@@ -615,7 +622,11 @@ ggsave(filename = 'mon.24plus.png',
 ### PLOT ALL 3 MAPS TOGETHER ----
 map.full.mon <- (mon.0.12 | mon.12.24 | mon.24plus) + 
   plot_layout(axes = "collect", guides = "collect") & 
-  theme(legend.position = "right")
+  theme(legend.position = "right",
+        legend.direction = "vertical",
+        legend.spacing.y = unit(-0.2, "cm"),
+        legend.margin = margin(0,0,0,0),
+        legend.key.height = unit(0.07, "npc"))
 ggsave(filename = 'map.LL.mon.per.length.png',
        units = 'mm',
        width = 297, height = 120,
