@@ -32,7 +32,7 @@ library(pacman)
 p_load(tidyverse,data.table,
        sf,giscoR,rnaturalearth,
        RColorBrewer,wesanderson,viridis,
-       patchwork)
+       patchwork, ggnewscale, ggpattern)
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -389,11 +389,31 @@ mon.0.12 <- ggplot() +
                        oob = scales::squish,
                        name = "Mean\nmonitoring\ncoverage",
                        na.value = "grey",
-                       # labels = c("0","10","20","30","40","50","550"),
-                       #limits = c(0, 550)
-                       #labels = c("0", "0.05", "0.1", "0.15", "0.20"),
-                       limits = c(0, 0.25)
+                       guide = guide_colorbar(order = 1),
+                       limits = c(0.00005, 0.25),
+                       breaks = c(0.00005, 0.05, 0.1, 0.15, 0.2, 0.25),
+                       labels = c(">0.00","0.05","0.10","0.15","0.20","0.25")
   ) +
+  ## Select separate colour/pattern for zero monitoring divisions
+  new_scale_fill() +
+  geom_sf_pattern(
+    data = ICES_NAFO_dat_mon %>%
+      dplyr::filter(length.cat == '<12m') %>%
+      dplyr::filter(ratio.mon == 0),
+    aes(fill = "0.00"),
+    pattern = "stripe",
+    pattern_colour = 'black',
+    pattern_fill = "#2D8093",
+    pattern_density = 0.5,
+    pattern_spacing = 0.05,
+    pattern_angle = 25
+  ) +
+  scale_fill_manual(
+    values = c("0.00" = '#2D8093'),
+    name = "",
+    guide = guide_legend(order = 2)
+  ) +
+  scale_pattern_manual(values = c("0.00000" = "stripe")) +
   ## Plot world map on top (because it should look better)
   geom_sf(data = world %>%
             dplyr::filter(continent %in% c("Europe","North America")), 
@@ -450,11 +470,31 @@ mon.12.24 <- ggplot() +
                        oob = scales::squish,
                        name = "Mean\nmonitoring\ncoverage",
                        na.value = "grey",
-                       # labels = c("0","10","20","30","40","50","550"),
-                       #limits = c(0, 550)
-                       #labels = c("0", "0.05", "0.1", "0.15", "0.20"),
-                       limits = c(0, 0.25)
+                       guide = guide_colorbar(order = 1),
+                       limits = c(0.00005, 0.25),
+                       breaks = c(0.00005, 0.05, 0.1, 0.15, 0.2, 0.25),
+                       labels = c(">0.00","0.05","0.10","0.15","0.20","0.25")
   ) +
+  ## Select separate colour/pattern for zero monitoring divisions
+  new_scale_fill() +
+  geom_sf_pattern(
+    data = ICES_NAFO_dat_mon %>%
+      dplyr::filter(length.cat == '<12m') %>%
+      dplyr::filter(ratio.mon == 0),
+    aes(fill = "0.00"),
+    pattern = "stripe",
+    pattern_colour = 'black',
+    pattern_fill = "#2D8093",
+    pattern_density = 0.5,
+    pattern_spacing = 0.05,
+    pattern_angle = 25
+  ) +
+  scale_fill_manual(
+    values = c("0.00" = '#2D8093'),
+    name = "",
+    guide = guide_legend(order = 2)
+  ) +
+  scale_pattern_manual(values = c("0.00000" = "stripe")) +
   ## Plot world map on top (because it should look better)
   geom_sf(data = world %>%
             dplyr::filter(continent %in% c("Europe","North America")), 
@@ -511,11 +551,31 @@ mon.24plus <- ggplot() +
                        oob = scales::squish,
                        name = "Mean\nmonitoring\ncoverage",
                        na.value = "grey",
-                       # labels = c("0","10","20","30","40","50","550"),
-                       #limits = c(0, 550)
-                       #labels = c("0", "0.05", "0.1", "0.15", "0.20"),
-                       limits = c(0, 0.25)
+                       guide = guide_colorbar(order = 1),
+                       limits = c(0.00005, 0.25),
+                       breaks = c(0.00005, 0.05, 0.1, 0.15, 0.2, 0.25),
+                       labels = c(">0.00","0.05","0.10","0.15","0.20","0.25")
   ) +
+  ## Select separate colour/pattern for zero monitoring divisions
+  new_scale_fill() +
+  geom_sf_pattern(
+    data = ICES_NAFO_dat_mon %>%
+      dplyr::filter(length.cat == '<12m') %>%
+      dplyr::filter(ratio.mon == 0),
+    aes(fill = "0.00"),
+    pattern = "stripe",
+    pattern_colour = 'black',
+    pattern_fill = "#2D8093",
+    pattern_density = 0.5,
+    pattern_spacing = 0.05,
+    pattern_angle = 25
+  ) +
+  scale_fill_manual(
+    values = c("0.00" = '#2D8093'),
+    name = "",
+    guide = guide_legend(order = 2)
+  ) +
+  scale_pattern_manual(values = c("0.00000" = "stripe")) +
   ## Plot world map on top (because it should look better)
   geom_sf(data = world %>%
             dplyr::filter(continent %in% c("Europe","North America")), 
