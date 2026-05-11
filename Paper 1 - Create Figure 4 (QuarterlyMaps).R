@@ -796,12 +796,12 @@ ggsave(filename = 'map.LL.mon.per.quarter.png',
        device = "png")
 
 ### STACK ALL 6 MAPS TOGETHER NOW----
-end.map <- map.full.effort / map.full.mon + plot_annotation(tag_levels = 'A')
+end.map.quarter <- map.quarter.effort / map.quarter.mon + plot_annotation(tag_levels = 'A')
 
-ggsave(filename = 'end.map.png',
+ggsave(filename = 'end.map.quarter.png',
        units = 'mm',
        width = 297, height = 297,
-       plot = end.map,
+       plot = end.map.quarter,
        device = "png")
 
 # library(cowplot)
