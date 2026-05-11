@@ -91,7 +91,7 @@ NAFO.divisions.sub <- subset(NAFO.divisions,
                                          '21.1.E', '21.1.F'))
 
 ### Fishing Effort data ----
-summary_dat_effort <- fread('summary_dat_effort.csv')
+summary_dat_effort <- fread('summary_dat_effort_quarter.csv')
 summary_dat_effort$quarter <- as.factor(summary_dat_effort$quarter)
 levels(summary_dat_effort$quarter)[levels(summary_dat_effort$quarter) == "1"] <- "Q1"
 levels(summary_dat_effort$quarter)[levels(summary_dat_effort$quarter) == "2"] <- "Q2"
